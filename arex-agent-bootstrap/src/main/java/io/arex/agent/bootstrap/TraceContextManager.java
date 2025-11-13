@@ -1,11 +1,14 @@
 package io.arex.agent.bootstrap;
 
 import io.arex.agent.bootstrap.ctx.ArexThreadLocal;
+import io.arex.agent.bootstrap.trace.TraceContext;
 
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 
 public class TraceContextManager {
+    TraceContext.TraceSpan span = TraceContext.createRoot();
+    // 原有逻辑...
     private static final ArexThreadLocal<String> TRACE_CONTEXT = new ArexThreadLocal<>();
     private static IDGenerator idGenerator;
 

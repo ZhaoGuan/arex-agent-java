@@ -1,6 +1,9 @@
 package io.arex.inst.httpclient.apache.sync;
 
 import io.arex.agent.bootstrap.model.MockResult;
+import io.arex.agent.bootstrap.trace.TraceContext;
+import io.arex.agent.bootstrap.trace.TraceHeaderNames;
+import io.arex.agent.bootstrap.trace.TracePropagator;
 import io.arex.inst.httpclient.apache.common.ApacheHttpClientHelper;
 import io.arex.inst.runtime.context.ContextManager;
 import io.arex.inst.runtime.context.RepeatedCollectManager;
@@ -17,6 +20,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.*;
@@ -26,7 +30,7 @@ public class InternalHttpClientInstrumentation extends TypeInstrumentation {
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
         return namedOneOf("org.apache.http.impl.client.InternalHttpClient",
-            "org.apache.http.impl.client.MinimalHttpClient");
+                "org.apache.http.impl.client.MinimalHttpClient");
     }
 
     @Override
@@ -37,7 +41,7 @@ public class InternalHttpClientInstrumentation extends TypeInstrumentation {
                         .and(takesArgument(0, named("org.apache.http.HttpHost")))
                         .and(takesArgument(1, named("org.apache.http.HttpRequest")))
                         .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
-            this.getClass().getName() + "$ExecuteAdvice"));
+                this.getClass().getName() + "$ExecuteAdvice"));
     }
 
     public static class ExecuteAdvice {
@@ -47,6 +51,14 @@ public class InternalHttpClientInstrumentation extends TypeInstrumentation {
                 @Advice.Argument(1) HttpRequest request,
                 @Advice.Local("extractor") HttpClientExtractor<HttpRequest, HttpResponse> extractor,
                 @Advice.Local("mockResult") MockResult mockResult) {
+            // 使用 TracePropagator 生成当前的跟踪头信息
+            Map<String, String> headers = TracePropagator.currentHeaders();
+
+            // 注入 Trace Header
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                request.addHeader(entry.getKey(), entry.getValue());
+            }
+            // 原有逻辑...
             if (ApacheHttpClientHelper.ignoreRequest(request)) {
                 return false;
             }

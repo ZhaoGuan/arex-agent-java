@@ -1,6 +1,7 @@
 package io.arex.inst.httpclient.apache.async;
 
 import io.arex.agent.bootstrap.model.MockResult;
+import io.arex.agent.bootstrap.trace.TracePropagator;
 import io.arex.inst.httpclient.apache.common.ApacheHttpClientHelper;
 import io.arex.inst.runtime.context.ContextManager;
 import io.arex.inst.runtime.context.RepeatedCollectManager;
@@ -14,6 +15,7 @@ import org.apache.http.HttpException;
 import org.apache.http.concurrent.FutureCallback;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 
@@ -50,6 +52,13 @@ public class InternalHttpAsyncClientInstrumentation extends TypeInstrumentation 
         public static boolean onEnter(@Advice.Argument(0) HttpAsyncRequestProducer producer,
             @Advice.Argument(value = 3, readOnly = false) FutureCallback<?> callback,
             @Advice.Local("mockResult") MockResult mockResult) throws HttpException, IOException {
+            // 使用 TracePropagator 生成当前的跟踪头信息
+            Map<String, String> headers = TracePropagator.currentHeaders();
+
+            // 注入 Trace Header
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                producer.generateRequest().addHeader(entry.getKey(), entry.getValue());
+            }
             if (ApacheHttpClientHelper.ignoreRequest(producer.generateRequest())) {
                 // for transmit trace context
                 callback = FutureCallbackWrapper.wrap(callback);

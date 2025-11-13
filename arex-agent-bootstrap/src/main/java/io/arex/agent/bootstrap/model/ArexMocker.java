@@ -1,11 +1,48 @@
 package io.arex.agent.bootstrap.model;
 
 import io.arex.agent.bootstrap.constants.ConfigConstants;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ArexMocker implements Mocker {
+    private String traceId;
+    private String spanId;
+    private String parentSpanId;
+
+    // --- 实现新增的接口方法 ---
+    @Override
+    public String getTraceId() {
+        return traceId;
+    }
+
+    @Override
+    public void setTraceId(String traceId) {
+        this.traceId = traceId;
+    }
+
+    @Override
+    public String getSpanId() {
+        return spanId;
+    }
+
+    @Override
+    public void setSpanId(String spanId) {
+        this.spanId = spanId;
+    }
+
+    @Override
+    public String getParentSpanId() {
+        return parentSpanId;
+    }
+
+    @Override
+    public void setParentSpanId(String parentSpanId) {
+        this.parentSpanId = parentSpanId;
+    }
+
+    // 原有逻辑...
     private String id;
     private MockCategoryType categoryType;
     private String replayId;
@@ -43,6 +80,7 @@ public class ArexMocker implements Mocker {
 
     /**
      * Put tag into the tags map will throw {@link UnsupportedOperationException}.
+     *
      * @return the tags map
      */
     public Map<String, String> getTags() {

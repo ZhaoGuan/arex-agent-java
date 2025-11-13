@@ -1,12 +1,36 @@
 package io.arex.agent.bootstrap.model;
 
 import io.arex.agent.bootstrap.util.StringUtil;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 public interface Mocker extends Serializable {
+    // --- Trace Context fields ---
 
+    /**
+     * 全局链路追踪 ID（跨服务唯一）
+     */
+    String getTraceId();
+
+    void setTraceId(String traceId);
+
+    /**
+     * 当前调用的唯一 Span ID
+     */
+    String getSpanId();
+
+    void setSpanId(String spanId);
+
+    /**
+     * 上一级调用的 Span ID
+     */
+    String getParentSpanId();
+
+    void setParentSpanId(String parentSpanId);
+
+    // 原有逻辑...
     String getAppId();
 
     String getReplayId();

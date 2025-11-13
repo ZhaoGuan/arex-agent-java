@@ -3,16 +3,18 @@ package io.arex.inst.httpclient.feign;
 import feign.Request;
 import feign.Response;
 import io.arex.agent.bootstrap.model.MockResult;
+import io.arex.agent.bootstrap.trace.TracePropagator;
 import io.arex.inst.extension.MethodInstrumentation;
 import io.arex.inst.extension.TypeInstrumentation;
 import io.arex.inst.httpclient.common.HttpClientExtractor;
 import io.arex.inst.runtime.context.ContextManager;
 import io.arex.inst.runtime.context.RepeatedCollectManager;
 import io.arex.inst.runtime.util.IgnoreUtils;
+
 import java.net.URI;
 import java.net.URL;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.Argument;
 import net.bytebuddy.asm.Advice.Local;
@@ -35,18 +37,26 @@ public class FeignClientInstrumentation extends TypeInstrumentation {
 
     @Override
     public List<MethodInstrumentation> methodAdvices() {
-        return Collections.singletonList(new MethodInstrumentation(
-            named("execute").and(takesArguments(2))
-                .and(takesArgument(0, named("feign.Request"))),
-            ExecuteAdvice.class.getName()));
+        return Collections.singletonList(new MethodInstrumentation(named("execute").and(takesArguments(2)).and(takesArgument(0, named("feign.Request"))), ExecuteAdvice.class.getName()));
     }
 
-    public static class ExecuteAdvice{
+    public static class ExecuteAdvice {
         @OnMethodEnter(skipOn = OnNonDefaultValue.class, suppress = Throwable.class)
-        public static boolean onEnter(@Argument(0)Request request,
-                @Local("adapter") FeignClientAdapter adapter,
-                @Local("extractor") HttpClientExtractor extractor,
-                @Local("mockResult") MockResult mockResult) {
+        public static boolean onEnter(@Argument(0) Request request, @Local("adapter") FeignClientAdapter adapter, @Local("extractor") HttpClientExtractor extractor, @Local("mockResult") MockResult mockResult) {
+            // 使用 TracePropagator 生成当前的跟踪头信息
+            Map<String, String> headers = TracePropagator.currentHeaders();
+
+            // 注入 Trace Header
+            Map<String, Collection<String>> newHeaders = new HashMap<>(request.headers());
+
+            Map<String, String> traceHeaders = TracePropagator.currentHeaders();
+            for (Map.Entry<String, String> entry : traceHeaders.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    newHeaders.putIfAbsent(entry.getKey(), Collections.singleton(entry.getValue()));
+                }
+            }
+            request = Request.create(request.method(), request.url(), newHeaders, request.body(), request.charset());
+
             if (ContextManager.needRecordOrReplay()) {
                 final URI uri = URI.create(request.url());
                 if (IgnoreUtils.excludeOperation(uri.getPath())) {
@@ -64,11 +74,7 @@ public class FeignClientInstrumentation extends TypeInstrumentation {
         }
 
         @OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-        public static void onExit(@Local("adapter") FeignClientAdapter adapter,
-                @Local("extractor") HttpClientExtractor extractor,
-                @Local("mockResult") MockResult mockResult,
-                @Return(readOnly = false, typing = Typing.DYNAMIC) Response response,
-                @Advice.Thrown(readOnly = false) Throwable throwable){
+        public static void onExit(@Local("adapter") FeignClientAdapter adapter, @Local("extractor") HttpClientExtractor extractor, @Local("mockResult") MockResult mockResult, @Return(readOnly = false, typing = Typing.DYNAMIC) Response response, @Advice.Thrown(readOnly = false) Throwable throwable) {
             if (extractor == null) {
                 return;
             }

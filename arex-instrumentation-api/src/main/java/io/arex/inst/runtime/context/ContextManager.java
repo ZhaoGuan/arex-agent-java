@@ -40,7 +40,7 @@ public class ContextManager {
     }
 
     /**
-     *  ArexContext.of(recordId, replayId)
+     * ArexContext.of(recordId, replayId)
      */
     private static ArexContext createContext(String recordId, String traceId) {
         // replay scene: traceId is replayId
@@ -99,5 +99,21 @@ public class ContextManager {
         if (context != null) {
             context.setAttachment(key, value);
         }
+    }
+
+    // io.arex.inst.runtime.context.ContextManager.java
+    private static final ThreadLocal<String> TRACE_ID = new ThreadLocal<>();
+
+    public static String getTraceId() {
+        String traceId = TRACE_ID.get();
+        if (traceId == null) {
+            traceId = java.util.UUID.randomUUID().toString();
+            TRACE_ID.set(traceId);
+        }
+        return traceId;
+    }
+
+    public static void setTraceId(String traceId) {
+        TRACE_ID.set(traceId);
     }
 }
