@@ -56,7 +56,7 @@ public class FeignClientInstrumentation extends TypeInstrumentation {
                 }
             }
             request = Request.create(request.method(), request.url(), newHeaders, request.body(), request.charset());
-
+            // 原有逻辑...
             if (ContextManager.needRecordOrReplay()) {
                 final URI uri = URI.create(request.url());
                 if (IgnoreUtils.excludeOperation(uri.getPath())) {
