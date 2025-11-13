@@ -51,6 +51,9 @@ public class InternalHttpClientInstrumentation extends TypeInstrumentation {
                 @Advice.Argument(1) HttpRequest request,
                 @Advice.Local("extractor") HttpClientExtractor<HttpRequest, HttpResponse> extractor,
                 @Advice.Local("mockResult") MockResult mockResult) {
+            if (ApacheHttpClientHelper.ignoreRequest(request)) {
+                return false;
+            }
             // 使用 TracePropagator 生成当前的跟踪头信息
             Map<String, String> headers = TracePropagator.currentHeaders();
 
@@ -59,10 +62,6 @@ public class InternalHttpClientInstrumentation extends TypeInstrumentation {
                 request.addHeader(entry.getKey(), entry.getValue());
             }
             // 原有逻辑...
-            if (ApacheHttpClientHelper.ignoreRequest(request)) {
-                return false;
-            }
-
             if (ContextManager.needRecordOrReplay()) {
                 RepeatedCollectManager.enter();
                 HttpClientAdapter<HttpRequest, HttpResponse> adapter = new ApacheHttpClientAdapter(request);

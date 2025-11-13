@@ -1,6 +1,7 @@
 package io.arex.inst.httpclient.okhttp.v3;
 
 import io.arex.agent.bootstrap.model.MockResult;
+import io.arex.agent.bootstrap.trace.TracePropagator;
 import io.arex.inst.runtime.context.ContextManager;
 import io.arex.inst.runtime.context.RepeatedCollectManager;
 import io.arex.inst.extension.MethodInstrumentation;
@@ -10,13 +11,10 @@ import io.arex.inst.runtime.util.IgnoreUtils;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -32,26 +30,32 @@ public class OkHttpCallInstrumentation extends TypeInstrumentation {
 
     @Override
     public List<MethodInstrumentation> methodAdvices() {
-        MethodInstrumentation executeMethod = new MethodInstrumentation(
-                named("execute").and(takesNoArguments()),
-                ExecuteAdvice.class.getName());
-        MethodInstrumentation enqueueMethod = new MethodInstrumentation(
-                named("enqueue").and(takesArguments(1)),
-                EnqueueAdvice.class.getName());
+        MethodInstrumentation executeMethod = new MethodInstrumentation(named("execute").and(takesNoArguments()), ExecuteAdvice.class.getName());
+        MethodInstrumentation enqueueMethod = new MethodInstrumentation(named("enqueue").and(takesArguments(1)), EnqueueAdvice.class.getName());
         return asList(executeMethod, enqueueMethod);
 
     }
 
     public static final class ExecuteAdvice {
         @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
-        public static boolean onEnter(
-                @Advice.This Call call,
-                @Advice.Local("wrapped") HttpClientExtractor<Request, Response> extractor,
-                @Advice.Local("mockResult") MockResult mockResult) {
+        public static boolean onEnter(@Advice.This Call call, @Advice.Local("wrapped") HttpClientExtractor<Request, Response> extractor, @Advice.Local("mockResult") MockResult mockResult) {
             Request request = call.request();
+
             if (IgnoreUtils.excludeOperation(request.url().uri().getPath())) {
                 return false;
             }
+            // 使用 TracePropagator 生成当前的跟踪头信息
+            Map<String, String> headers = TracePropagator.currentHeaders();
+
+            // 注入 Trace Header
+            Request.Builder builder = request.newBuilder();
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null) {
+                    builder.addHeader(entry.getKey(), entry.getValue()); // addHeader 会追加
+                }
+            }
+            request = builder.build();
+            // 原有逻辑...
 
             if (ContextManager.needRecordOrReplay()) {
                 RepeatedCollectManager.enter();
@@ -65,11 +69,7 @@ public class OkHttpCallInstrumentation extends TypeInstrumentation {
         }
 
         @Advice.OnMethodExit(onThrowable = IOException.class, suppress = Throwable.class)
-        public static void onExit(
-                @Advice.Local("wrapped") HttpClientExtractor<Request, Response> extractor,
-                @Advice.Thrown(readOnly = false) Exception throwable,
-                @Advice.Return(readOnly = false) Response response,
-                @Advice.Local("mockResult") MockResult mockResult) throws IOException {
+        public static void onExit(@Advice.Local("wrapped") HttpClientExtractor<Request, Response> extractor, @Advice.Thrown(readOnly = false) Exception throwable, @Advice.Return(readOnly = false) Response response, @Advice.Local("mockResult") MockResult mockResult) throws IOException {
             if (extractor == null || !RepeatedCollectManager.exitAndValidate()) {
                 return;
             }
@@ -94,9 +94,7 @@ public class OkHttpCallInstrumentation extends TypeInstrumentation {
 
     public static final class EnqueueAdvice {
         @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
-        public static boolean onEnter(@Advice.This Call call,
-            @Advice.Argument(value = 0, readOnly = false) Callback callback,
-            @Advice.Local("mockResult") MockResult mockResult) {
+        public static boolean onEnter(@Advice.This Call call, @Advice.Argument(value = 0, readOnly = false) Callback callback, @Advice.Local("mockResult") MockResult mockResult) {
             if (IgnoreUtils.excludeOperation(call.request().url().uri().getPath())) {
                 return false;
             }
@@ -113,10 +111,8 @@ public class OkHttpCallInstrumentation extends TypeInstrumentation {
         }
 
         @Advice.OnMethodExit(suppress = Throwable.class)
-        public static void onExit(@Advice.Argument(value = 0) Callback callback,
-            @Advice.Local("mockResult") MockResult mockResult) {
-            if (callback instanceof OkHttpCallbackWrapper &&
-                mockResult != null && mockResult.notIgnoreMockResult()) {
+        public static void onExit(@Advice.Argument(value = 0) Callback callback, @Advice.Local("mockResult") MockResult mockResult) {
+            if (callback instanceof OkHttpCallbackWrapper && mockResult != null && mockResult.notIgnoreMockResult()) {
                 OkHttpCallbackWrapper callbackWrapper = (OkHttpCallbackWrapper) callback;
                 callbackWrapper.replay(mockResult);
             }

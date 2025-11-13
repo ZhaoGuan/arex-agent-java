@@ -37,6 +37,9 @@ public class AsyncHttpClientInstrumentation extends TypeInstrumentation {
     public static class ExecuteRequestAdvice {
         @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Advice.OnNonDefaultValue.class)
         public static boolean onEnter(@Advice.Argument(0) Request request, @Advice.Local("mockResult") MockResult mockResult, @Advice.Local("extractor") HttpClientExtractor<Request, Object> extractor) {
+            if (IgnoreUtils.excludeOperation(request.getUri().getPath())) {
+                return false;
+            }
             // 使用 TracePropagator 生成当前的跟踪头信息
             // 注入 Trace Header
             RequestBuilder builder = new RequestBuilder(request);
@@ -48,9 +51,6 @@ public class AsyncHttpClientInstrumentation extends TypeInstrumentation {
             }
             request = builder.build();
             // 原有逻辑...
-            if (IgnoreUtils.excludeOperation(request.getUri().getPath())) {
-                return false;
-            }
             if (ContextManager.needRecord()) {
                 RepeatedCollectManager.enter();
             }

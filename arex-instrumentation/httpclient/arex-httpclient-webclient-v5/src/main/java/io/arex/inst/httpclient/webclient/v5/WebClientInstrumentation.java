@@ -1,6 +1,7 @@
 package io.arex.inst.httpclient.webclient.v5;
 
 import io.arex.agent.bootstrap.model.MockResult;
+import io.arex.agent.bootstrap.trace.TracePropagator;
 import io.arex.inst.extension.MethodInstrumentation;
 import io.arex.inst.extension.TypeInstrumentation;
 import io.arex.inst.runtime.context.ContextManager;
@@ -15,6 +16,7 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,7 +40,8 @@ public class WebClientInstrumentation extends TypeInstrumentation {
 
 
     public static final class ExchangeAdvice {
-        private ExchangeAdvice() {}
+        private ExchangeAdvice() {
+        }
 
         @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
         public static boolean onEnter(@Advice.Argument(0) ClientRequest clientRequest,
@@ -48,7 +51,17 @@ public class WebClientInstrumentation extends TypeInstrumentation {
             if (IgnoreUtils.excludeOperation(clientRequest.url().getPath())) {
                 return false;
             }
-
+            // 注入 Trace Header
+            Map<String, String> traceHeaders = TracePropagator.currentHeaders();
+            ClientRequest.Builder builder = ClientRequest.from(clientRequest);
+            for (Map.Entry<String, String> entry : traceHeaders.entrySet()) {
+                if (entry.getKey() != null && entry.getValue() != null
+                        && !clientRequest.headers().containsKey(entry.getKey())) {
+                    builder.header(entry.getKey(), entry.getValue());
+                }
+            }
+            clientRequest = builder.build();
+            // 原有逻辑...
             if (ContextManager.needRecordOrReplay()) {
                 RepeatedCollectManager.enter();
                 wrapper = new WebClientWrapper(clientRequest, strategies);
