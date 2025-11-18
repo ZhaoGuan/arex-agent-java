@@ -29,7 +29,7 @@ public class MockResult {
     }
 
     public static MockResult success(boolean ignoreMockResult, Object mockResult) {
-        // TODO 记录修改的内容 空结果返回 null
+        // TODO 记录修改的内容 空结果返回 null 防止出现服务500
         if (mockResult == null) {
             return null;
         }
