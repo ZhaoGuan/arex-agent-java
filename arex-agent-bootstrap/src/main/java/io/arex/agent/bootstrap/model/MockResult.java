@@ -29,6 +29,10 @@ public class MockResult {
     }
 
     public static MockResult success(boolean ignoreMockResult, Object mockResult) {
+        // 空结果返回 null
+        if (mockResult == null) {
+            return null;
+        }
         if (mockResult instanceof Throwable) {
             return new MockResult(ignoreMockResult, null, (Throwable) mockResult);
         }
