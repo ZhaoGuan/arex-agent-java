@@ -346,6 +346,7 @@ public class ConfigManager {
     }
 
     public void updateConfigFromService(ResponseBody serviceConfig) {
+        // todo 从服务获取配置信息 可以自己加入自己的数据 信息是 body 中的内容
         ServiceCollectConfig config = serviceConfig.getServiceCollectConfiguration();
         setRecordRate(config.getSampleRate());
         setAllowDayOfWeeks(config.getAllowDayOfWeeks());
