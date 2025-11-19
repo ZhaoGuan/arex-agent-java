@@ -34,7 +34,7 @@ public class ExecutorInstrumentation extends TypeInstrumentation {
 
     @Override
     protected ElementMatcher<TypeDescription> typeMatcher() {
-        return  named(CLASS_NAME_BASE_EXECUTOR)
+        return named(CLASS_NAME_BASE_EXECUTOR)
                 .or(named(CLASS_NAME_BATCH_EXECUTOR))
                 .and(not(nameStartsWith("com.sun.proxy.$Proxy")));
     }
@@ -104,7 +104,6 @@ public class ExecutorInstrumentation extends TypeInstrumentation {
                 }
                 return;
             }
-
             if (ContextManager.needRecord() && RepeatedCollectManager.exitAndValidate()) {
                 InternalExecutor.record(extractor, var2, result, throwable);
             }
@@ -236,7 +235,7 @@ public class ExecutorInstrumentation extends TypeInstrumentation {
         }
 
         @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-        public static void onExit(@Advice.FieldValue(value = "batchResultList",readOnly = false) List<BatchResult> batchResults,
+        public static void onExit(@Advice.FieldValue(value = "batchResultList", readOnly = false) List<BatchResult> batchResults,
                                   @Advice.FieldValue(value = "currentSql", readOnly = false) String currentSql,
                                   @Advice.Return(readOnly = false) List<BatchResult> result,
                                   @Advice.Argument(0) boolean isRollback,

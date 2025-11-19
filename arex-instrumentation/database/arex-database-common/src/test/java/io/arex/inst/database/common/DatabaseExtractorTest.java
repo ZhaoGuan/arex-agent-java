@@ -59,8 +59,8 @@ class DatabaseExtractorTest {
     @Test
     void replay() throws SQLException {
         try (MockedStatic<MockUtils> mockService = mockStatic(MockUtils.class);
-            MockedStatic<IgnoreUtils> ignoreService = mockStatic(IgnoreUtils.class);
-            MockedStatic<Serializer> serializer = mockStatic(Serializer.class)) {
+             MockedStatic<IgnoreUtils> ignoreService = mockStatic(IgnoreUtils.class);
+             MockedStatic<Serializer> serializer = mockStatic(Serializer.class)) {
             ignoreService.when(() -> IgnoreUtils.ignoreMockResult(any(), any())).thenReturn(true);
             mockStatic(DatabaseUtils.class);
 
@@ -83,9 +83,7 @@ class DatabaseExtractorTest {
 
             MockResult mockResult = MockResult.success(true, null);
             mockService.when(() -> MockUtils.replayBody(any())).thenReturn(mockResult);
-
             assertEquals(mockResult.isIgnoreMockResult(), target.replay().isIgnoreMockResult());
-
             // replay deserializeWithType
             response.setAttribute(ArexConstants.AREX_SERIALIZER, ArexConstants.JACKSON_SERIALIZER_WITH_TYPE);
             target.replay();
