@@ -28,6 +28,7 @@ import java.util.List;
 public class DubboStreamConsumerExtractor {
     private static final Logger LOGGER = LoggerFactory.getLogger(DubboStreamConsumerExtractor.class);
     private DubboStreamAdapter adapter;
+
     public DubboStreamConsumerExtractor(DubboStreamAdapter adapter) {
         this.adapter = adapter;
     }
@@ -117,6 +118,7 @@ public class DubboStreamConsumerExtractor {
 
     public void doReplay(TripleClientCall clientCall, ClientCall.Listener listener, List<MockResult> mockResults) {
         try {
+            //TODO 因为修改 MockResult.success 这里报错了
             boolean autoRequest = clientCall.isAutoRequest();
             clientCall.setAutoRequest(false);
             listener.onStart(clientCall);
@@ -126,6 +128,7 @@ public class DubboStreamConsumerExtractor {
                     listener.onClose(status, null);
                 } else {
                     listener.onMessage(mockResult.getResult());
+
                 }
             }
             // restore
