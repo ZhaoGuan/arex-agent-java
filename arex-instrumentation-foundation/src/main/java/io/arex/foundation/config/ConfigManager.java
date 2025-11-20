@@ -362,7 +362,7 @@ public class ConfigManager {
         try {
             ConfigQueryResponse.CustomParameters customParameters = serviceConfig.getCustomParameters();
             if (customParameters.isAlwaysReplay()) {
-                System.setProperty("arex.enable.isAlwaysReplay", "true");
+                System.setProperty("arex.isAlwaysReplay", "true");
             }
         } catch (Exception e) {
             LOGGER.error("CustomParameters Data Error: " + e);

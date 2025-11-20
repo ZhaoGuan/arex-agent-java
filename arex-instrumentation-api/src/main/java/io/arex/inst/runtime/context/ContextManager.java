@@ -66,8 +66,8 @@ public class ContextManager {
     }
 
     public static boolean needReplay() {
-        String isAlwaysReplay = System.getProperty("arex.enable.isAlwaysReplay");
-        LogManager.info("needReplay isAlwaysReplay: ", String.valueOf(isAlwaysReplay));
+        // TODO 新增replay开关
+        String isAlwaysReplay = System.getProperty("arex.isAlwaysReplay");
         if (isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
             return true;
         }
@@ -76,8 +76,8 @@ public class ContextManager {
     }
 
     public static boolean needRecordOrReplay() {
-        String isAlwaysReplay = System.getProperty("arex.enable.isAlwaysReplay");
-        LogManager.info("needRecordOrReplay isAlwaysReplay: ", String.valueOf(isAlwaysReplay));
+        // TODO 新增replay开关
+        String isAlwaysReplay = System.getProperty("arex.isAlwaysReplay");
         if (isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
             return true;
         }

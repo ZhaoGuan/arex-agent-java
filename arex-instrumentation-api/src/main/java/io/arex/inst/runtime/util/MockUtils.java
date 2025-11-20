@@ -126,14 +126,12 @@ public final class MockUtils {
     }
 
     public static Mocker replayMocker(Mocker requestMocker, MockStrategyEnum mockStrategy) {
-        // TODO 这里需要一个逻辑是否 requestMocker.getReplayId() 都要执行
-        String isAlwaysReplay = System.getProperty("arex.enable.isAlwaysReplay");
-        LogManager.info("replayMocker isAlwaysReplay: ", String.valueOf(isAlwaysReplay));
-        LogManager.info("replayMocker", String.valueOf(requestMocker.getReplayId()));
-        LogManager.info("replayMocker", String.valueOf(requestMocker.isNeedMerge()));
+        // TODO 新增replay开关
+        String isAlwaysReplay = System.getProperty("arex.isAlwaysReplay");
         if (isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
             return executeReplay(requestMocker, mockStrategy);
         }
+        // TODO 这里的原有逻辑 具体作用
         if (CaseManager.isInvalidCase(requestMocker.getReplayId()) &&
                 isNotConfigFile(requestMocker.getCategoryType())) {
             return null;
