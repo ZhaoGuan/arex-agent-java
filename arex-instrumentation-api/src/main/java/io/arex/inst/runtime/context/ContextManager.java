@@ -60,10 +60,12 @@ public class ContextManager {
     }
 
     public static boolean needRecord() {
-        // TODO 处理录制逻辑
+        // TODO 新增recoard开关
+        String isAlwaysRecord = System.getProperty("arex.isAlwaysRecord");
+        if (isAlwaysRecord != null && isAlwaysRecord.equals("true")) {
+            return true;
+        }
         ArexContext context = currentContext();
-        // TODO logger
-        LogManager.info("ContextManager needRecord", String.valueOf(context != null && !context.isReplay()));
         return context != null && !context.isReplay();
     }
 

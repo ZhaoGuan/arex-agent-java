@@ -237,6 +237,7 @@ public class ConfigQueryResponse {
     // TODO ResponseBody 中的自定义参数
     public static class CustomParameters {
         private boolean alwaysReplay;
+        private boolean alwaysRecord;
 
         public boolean isAlwaysReplay() {
             return alwaysReplay;
@@ -244,6 +245,14 @@ public class ConfigQueryResponse {
 
         public void setAlwaysReplay(boolean alwaysReplay) {
             this.alwaysReplay = alwaysReplay;
+        }
+
+        public boolean isAlwaysRecord() {
+            return alwaysRecord;
+        }
+
+        public void setAlwaysRecord(boolean alwaysRecord) {
+            this.alwaysRecord = alwaysRecord;
         }
     }
 }

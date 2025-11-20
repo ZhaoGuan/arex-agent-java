@@ -364,8 +364,11 @@ public class ConfigManager {
             if (customParameters.isAlwaysReplay()) {
                 System.setProperty("arex.isAlwaysReplay", "true");
             }
+            if (customParameters.isAlwaysRecord()) {
+                System.setProperty("arex.isAlwaysRecord", "true");
+            }
         } catch (Exception e) {
-            LOGGER.error("CustomParameters Data Error: " + e);
+            LOGGER.error("CustomParameters Error: " + e);
         }
     }
 
