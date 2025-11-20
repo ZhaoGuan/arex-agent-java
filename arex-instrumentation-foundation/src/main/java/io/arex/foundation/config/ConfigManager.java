@@ -6,6 +6,7 @@ import io.arex.agent.bootstrap.util.MapUtils;
 import io.arex.agent.bootstrap.util.StringUtil;
 import io.arex.foundation.logger.AgentLogger;
 import io.arex.foundation.logger.AgentLoggerFactory;
+import io.arex.foundation.model.ConfigQueryResponse;
 import io.arex.foundation.model.ConfigQueryResponse.DynamicClassConfiguration;
 import io.arex.foundation.model.ConfigQueryResponse.ResponseBody;
 import io.arex.foundation.model.ConfigQueryResponse.ServiceCollectConfig;
@@ -16,6 +17,7 @@ import io.arex.inst.runtime.config.listener.ConfigListener;
 import io.arex.inst.runtime.model.DynamicClassEntity;
 import io.arex.inst.runtime.model.DynamicClassStatusEnum;
 import io.arex.agent.bootstrap.util.ServiceLoader;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -158,10 +160,10 @@ public class ConfigManager {
      * 1. addEntity: all entity of the same class of the added entity class need to be set to retransform
      * 2. resetEntity: resetEntityClassSet only contains the class not in newDynamicClassList
      * ex: oldDynamicClassList: ClassA methodA, ClassB methodB, ClassC methodC
-     *     newDynamicClassList: ClassA methodA, ClassA methodA2, ClassB methodB2
-     *     addEntityClassSet: ClassA, ClassB
-     *     resetEntityClassSet: ClassC
-     *     retransform: ClassA: methodA, methodA2, ClassB methodB2
+     * newDynamicClassList: ClassA methodA, ClassA methodA2, ClassB methodB2
+     * addEntityClassSet: ClassA, ClassB
+     * resetEntityClassSet: ClassC
+     * retransform: ClassA: methodA, methodA2, ClassB methodB2
      */
     public void setDynamicClassList(List<DynamicClassConfiguration> newDynamicConfigList) {
         if (newDynamicConfigList == null) {
@@ -188,8 +190,7 @@ public class ConfigManager {
             return;
         }
 
-        final Map<String, List<DynamicClassEntity>> newDynamicMap = newDynamicClassList.stream()
-                .collect(Collectors.groupingBy(DynamicClassEntity::getClazzName));
+        final Map<String, List<DynamicClassEntity>> newDynamicMap = newDynamicClassList.stream().collect(Collectors.groupingBy(DynamicClassEntity::getClazzName));
         Set<String> changedClassSet = getDiffClassSet(dynamicClassList, newDynamicClassList);
         for (String clazzName : changedClassSet) {
             final List<DynamicClassEntity> needRetransformEntities = newDynamicMap.get(clazzName);
@@ -244,8 +245,7 @@ public class ConfigManager {
     }
 
     private DynamicClassEntity createDynamicClass(DynamicClassConfiguration config, String keyFormula) {
-        DynamicClassEntity newItem = new DynamicClassEntity(config.getFullClassName(), config.getMethodName(),
-                config.getParameterTypes(), keyFormula);
+        DynamicClassEntity newItem = new DynamicClassEntity(config.getFullClassName(), config.getMethodName(), config.getParameterTypes(), keyFormula);
         newItem.setStatus(DynamicClassStatusEnum.UNCHANGED);
         return newItem;
     }
@@ -346,7 +346,6 @@ public class ConfigManager {
     }
 
     public void updateConfigFromService(ResponseBody serviceConfig) {
-        // todo 从服务获取配置信息 可以自己加入自己的数据 信息是 body 中的内容
         ServiceCollectConfig config = serviceConfig.getServiceCollectConfiguration();
         setRecordRate(config.getSampleRate());
         setAllowDayOfWeeks(config.getAllowDayOfWeeks());
@@ -359,6 +358,15 @@ public class ConfigManager {
         setMessage(serviceConfig.getMessage());
 
         updateRuntimeConfig();
+        // todo 新增自定义参数
+        try {
+            ConfigQueryResponse.CustomParameters customParameters = serviceConfig.getCustomParameters();
+            if (customParameters.isAlwaysReplay()) {
+                System.setProperty("arex.enable.isAlwaysReplay", "true");
+            }
+        } catch (Exception e) {
+            LOGGER.error("CustomParameters Data Error: " + e);
+        }
     }
 
     private void updateRuntimeConfig() {
@@ -379,14 +387,7 @@ public class ConfigManager {
             appendCoveragePackages(extendFieldMap.get(COVERAGE_PACKAGES));
         }
 
-        ConfigBuilder.create(getServiceName())
-            .enableDebug(isEnableDebug())
-            .addProperties(configMap)
-            .dynamicClassList(getDynamicClassList())
-            .excludeServiceOperations(getExcludeServiceOperations())
-            .dubboStreamReplayThreshold(getDubboStreamReplayThreshold())
-            .recordRate(getRecordRate())
-            .build();
+        ConfigBuilder.create(getServiceName()).enableDebug(isEnableDebug()).addProperties(configMap).dynamicClassList(getDynamicClassList()).excludeServiceOperations(getExcludeServiceOperations()).dubboStreamReplayThreshold(getDubboStreamReplayThreshold()).recordRate(getRecordRate()).build();
         publish(Config.get());
     }
 
@@ -467,8 +468,7 @@ public class ConfigManager {
         if (StringUtil.isEmpty(allowTimeOfDayFrom)) {
             return;
         }
-        this.allowTimeOfDayFrom = LocalTime.parse(allowTimeOfDayFrom,
-            DateTimeFormatter.ofPattern("HH:mm"));
+        this.allowTimeOfDayFrom = LocalTime.parse(allowTimeOfDayFrom, DateTimeFormatter.ofPattern("HH:mm"));
         System.setProperty(ALLOW_TIME_FROM, allowTimeOfDayFrom);
     }
 
@@ -480,8 +480,7 @@ public class ConfigManager {
         if (StringUtil.isEmpty(allowTimeOfDayTo)) {
             return;
         }
-        this.allowTimeOfDayTo = LocalTime.parse(allowTimeOfDayTo,
-            DateTimeFormatter.ofPattern("HH:mm"));
+        this.allowTimeOfDayTo = LocalTime.parse(allowTimeOfDayTo, DateTimeFormatter.ofPattern("HH:mm"));
         System.setProperty(ALLOW_TIME_TO, allowTimeOfDayTo);
     }
 
@@ -568,8 +567,7 @@ public class ConfigManager {
             return;
         }
 
-        this.excludeServiceOperations = new HashSet<>(
-            Arrays.asList(StringUtil.split(excludeServiceOperations, ',')));
+        this.excludeServiceOperations = new HashSet<>(Arrays.asList(StringUtil.split(excludeServiceOperations, ',')));
     }
 
     public void setExcludeServiceOperations(Set<String> excludeServiceOperationSet) {
@@ -633,18 +631,6 @@ public class ConfigManager {
 
     @Override
     public String toString() {
-        return "ConfigManager{" +
-            "enableDebug=" + enableDebug +
-            ", agentVersion='" + agentVersion + '\'' +
-            ", serviceName='" + serviceName + '\'' +
-            ", storageServiceHost='" + storageServiceHost + '\'' +
-            ", configPath='" + configPath + '\'' +
-            ", storageServiceMode='" + storageServiceMode + '\'' +
-            ", recordRate='" + recordRate + '\'' +
-            ", allowDayOfWeeks='" + allowDayOfWeeks + '\'' +
-            ", allowTimeOfDayFrom='" + allowTimeOfDayFrom + '\'' +
-            ", allowTimeOfDayTo='" + allowTimeOfDayTo + '\'' +
-            ", dynamicClassList='" + dynamicClassList + '\'' +
-            '}';
+        return "ConfigManager{" + "enableDebug=" + enableDebug + ", agentVersion='" + agentVersion + '\'' + ", serviceName='" + serviceName + '\'' + ", storageServiceHost='" + storageServiceHost + '\'' + ", configPath='" + configPath + '\'' + ", storageServiceMode='" + storageServiceMode + '\'' + ", recordRate='" + recordRate + '\'' + ", allowDayOfWeeks='" + allowDayOfWeeks + '\'' + ", allowTimeOfDayFrom='" + allowTimeOfDayFrom + '\'' + ", allowTimeOfDayTo='" + allowTimeOfDayTo + '\'' + ", dynamicClassList='" + dynamicClassList + '\'' + '}';
     }
 }

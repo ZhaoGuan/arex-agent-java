@@ -4,6 +4,9 @@ import io.arex.agent.bootstrap.TraceContextManager;
 import io.arex.agent.bootstrap.util.CollectionUtil;
 import io.arex.agent.bootstrap.util.StringUtil;
 import io.arex.inst.runtime.listener.ContextListener;
+import io.arex.inst.runtime.log.LogManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +15,7 @@ import java.util.Map;
 public class ContextManager {
     private static final Map<String, ArexContext> RECORD_MAP = new LatencyContextHashMap();
     private static final List<ContextListener> LISTENERS = new ArrayList<>();
+    private static final Logger log = LoggerFactory.getLogger(ContextManager.class);
 
     /**
      * agent call this method
@@ -40,7 +44,7 @@ public class ContextManager {
     }
 
     /**
-     *  ArexContext.of(recordId, replayId)
+     * ArexContext.of(recordId, replayId)
      */
     private static ArexContext createContext(String recordId, String traceId) {
         // replay scene: traceId is replayId
@@ -57,15 +61,26 @@ public class ContextManager {
 
     public static boolean needRecord() {
         ArexContext context = currentContext();
+        LogManager.info("ContextManager needRecord", String.valueOf(context != null && !context.isReplay()));
         return context != null && !context.isReplay();
     }
 
     public static boolean needReplay() {
+        String isAlwaysReplay = System.getProperty("arex.enable.isAlwaysReplay");
+        LogManager.info("needReplay isAlwaysReplay: ", String.valueOf(isAlwaysReplay));
+        if (isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
+            return true;
+        }
         ArexContext context = currentContext();
         return context != null && context.isReplay();
     }
 
     public static boolean needRecordOrReplay() {
+        String isAlwaysReplay = System.getProperty("arex.enable.isAlwaysReplay");
+        LogManager.info("needRecordOrReplay isAlwaysReplay: ", String.valueOf(isAlwaysReplay));
+        if (isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
+            return true;
+        }
         return currentContext() != null;
     }
 

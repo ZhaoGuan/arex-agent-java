@@ -63,13 +63,15 @@ public class ConfigQueryResponse {
         private List<DynamicClassConfiguration> dynamicClassConfigurationList;
         private boolean agentEnabled;
         private Map<String, String> extendField;
+        // TODO 自定义参数
+        private CustomParameters customParameters;
 
         public ServiceCollectConfig getServiceCollectConfiguration() {
             return serviceCollectConfiguration;
         }
 
         public void setServiceCollectConfiguration(
-            ServiceCollectConfig serviceCollectConfiguration) {
+                ServiceCollectConfig serviceCollectConfiguration) {
             this.serviceCollectConfiguration = serviceCollectConfiguration;
         }
 
@@ -86,7 +88,7 @@ public class ConfigQueryResponse {
         }
 
         public void setDynamicClassConfigurationList(
-            List<DynamicClassConfiguration> dynamicClassConfigurationList) {
+                List<DynamicClassConfiguration> dynamicClassConfigurationList) {
             this.dynamicClassConfigurationList = dynamicClassConfigurationList;
         }
 
@@ -112,6 +114,16 @@ public class ConfigQueryResponse {
 
         public void setExtendField(Map<String, String> extendField) {
             this.extendField = extendField;
+        }
+
+        // TODO 自定义参数
+        public CustomParameters getCustomParameters() {
+            return customParameters;
+        }
+
+        // TODO 自定义参数
+        public void setCustomParameters(CustomParameters customParameters) {
+            this.customParameters = customParameters;
         }
     }
 
@@ -219,6 +231,19 @@ public class ConfigQueryResponse {
 
         public void setKeyFormula(String keyFormula) {
             this.keyFormula = keyFormula;
+        }
+    }
+
+    // TODO ResponseBody 中的自定义参数
+    public static class CustomParameters {
+        private boolean alwaysReplay;
+
+        public boolean isAlwaysReplay() {
+            return alwaysReplay;
+        }
+
+        public void setAlwaysReplay(boolean alwaysReplay) {
+            this.alwaysReplay = alwaysReplay;
         }
     }
 }

@@ -126,6 +126,14 @@ public final class MockUtils {
     }
 
     public static Mocker replayMocker(Mocker requestMocker, MockStrategyEnum mockStrategy) {
+        // TODO 这里需要一个逻辑是否 requestMocker.getReplayId() 都要执行
+        String isAlwaysReplay = System.getProperty("arex.enable.isAlwaysReplay");
+        LogManager.info("replayMocker isAlwaysReplay: ", String.valueOf(isAlwaysReplay));
+        LogManager.info("replayMocker", String.valueOf(requestMocker.getReplayId()));
+        LogManager.info("replayMocker", String.valueOf(requestMocker.isNeedMerge()));
+        if (isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
+            return executeReplay(requestMocker, mockStrategy);
+        }
         if (CaseManager.isInvalidCase(requestMocker.getReplayId()) &&
                 isNotConfigFile(requestMocker.getCategoryType())) {
             return null;
@@ -182,7 +190,7 @@ public final class MockUtils {
         }
 
         return Serializer.deserialize(responseMocker.getTargetResponse().getBody(),
-            responseMocker.getTargetResponse().getType());
+                responseMocker.getTargetResponse().getType());
     }
 
     public static boolean checkResponseMocker(Mocker responseMocker) {
