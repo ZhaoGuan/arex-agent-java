@@ -24,6 +24,7 @@ public class RepeatedCollectManager {
 
     public static boolean exitAndValidate() {
         CallDepth callDepth = Context.get();
+        // TODO 处理录制逻辑
         if (callDepth == null) {
             return true;
         }

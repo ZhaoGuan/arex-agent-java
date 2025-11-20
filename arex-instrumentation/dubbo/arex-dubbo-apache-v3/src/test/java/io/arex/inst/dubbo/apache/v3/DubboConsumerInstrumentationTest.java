@@ -52,19 +52,18 @@ class DubboConsumerInstrumentationTest {
         assertNotNull(target.methodAdvices());
     }
 
-    //TODO 因为修改 MockResult.success 这里报错了
-//    @Test
-//    void onEnter() {
-//        try (MockedConstruction<DubboConsumerExtractor> mocked = Mockito.mockConstruction(DubboConsumerExtractor.class, (mock, context) -> {
-//            Mockito.when(mock.replay()).thenReturn(MockResult.success(false, null));
-//        })) {
-//            Invocation invocation = Mockito.mock(Invocation.class);
-//            Mockito.when(invocation.getProtocolServiceKey()).thenReturn(":tri");
-//            assertFalse(DubboConsumerInstrumentation.InvokeAdvice.onEnter(null, invocation, null, null));
-//            Mockito.when(invocation.getProtocolServiceKey()).thenReturn("mock");
-//            assertTrue(DubboConsumerInstrumentation.InvokeAdvice.onEnter(null, invocation, null, null));
-//        }
-//    }
+    @Test
+    void onEnter() {
+        try (MockedConstruction<DubboConsumerExtractor> mocked = Mockito.mockConstruction(DubboConsumerExtractor.class, (mock, context) -> {
+            Mockito.when(mock.replay()).thenReturn(MockResult.success(false, null));
+        })) {
+            Invocation invocation = Mockito.mock(Invocation.class);
+            Mockito.when(invocation.getProtocolServiceKey()).thenReturn(":tri");
+            assertFalse(DubboConsumerInstrumentation.InvokeAdvice.onEnter(null, invocation, null, null));
+            Mockito.when(invocation.getProtocolServiceKey()).thenReturn("mock");
+            assertTrue(DubboConsumerInstrumentation.InvokeAdvice.onEnter(null, invocation, null, null));
+        }
+    }
 
     @ParameterizedTest
     @MethodSource("onExitCase")

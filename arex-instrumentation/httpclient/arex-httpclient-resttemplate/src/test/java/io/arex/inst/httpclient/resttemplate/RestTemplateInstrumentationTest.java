@@ -65,9 +65,7 @@ class RestTemplateInstrumentationTest {
 
             // replay
             Mockito.when(ContextManager.needReplay()).thenReturn(true);
-            //TODO 因为修改 MockResult.success 这里报错了
-            //assertTrue(RestTemplateInstrumentation.ExecuteAdvice.onEnter(uri, HttpMethod.POST, requestCallback, extractor, mockResult));
-            assertFalse(RestTemplateInstrumentation.ExecuteAdvice.onEnter(uri, HttpMethod.POST, requestCallback, extractor, mockResult));
+            assertTrue(RestTemplateInstrumentation.ExecuteAdvice.onEnter(uri, HttpMethod.POST, requestCallback, extractor, mockResult));
         }
     }
 

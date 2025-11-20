@@ -68,9 +68,7 @@ class WebClientInstrumentationTest {
         })) {
             Mockito.when(ContextManager.needRecordOrReplay()).thenReturn(true);
             Mockito.when(ContextManager.needReplay()).thenReturn(true);
-            //TODO 因为修改 MockResult.success 这里报错了
-            //assertTrue(WebClientInstrumentation.ExchangeAdvice.onEnter(request, null, null, null));
-            assertFalse(WebClientInstrumentation.ExchangeAdvice.onEnter(request, null, null, null));
+            assertTrue(WebClientInstrumentation.ExchangeAdvice.onEnter(request, null, null, null));
 
             Mockito.when(IgnoreUtils.excludeOperation(any())).thenReturn(true);
             assertFalse(WebClientInstrumentation.ExchangeAdvice.onEnter(request, null, null, null));

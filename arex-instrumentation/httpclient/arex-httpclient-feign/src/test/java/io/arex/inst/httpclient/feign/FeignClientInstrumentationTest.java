@@ -68,9 +68,7 @@ class FeignClientInstrumentationTest {
 
         // need replay and not exclude operation
         Mockito.when(ContextManager.needReplay()).thenReturn(true);
-        //TODO 因为修改 MockResult.success 这里报错了
-        //assertTrue(FeignClientInstrumentation.ExecuteAdvice.onEnter(request, null, null, null));
-        assertFalse(FeignClientInstrumentation.ExecuteAdvice.onEnter(request, null, null, null));
+        assertTrue(FeignClientInstrumentation.ExecuteAdvice.onEnter(request, null, null, null));
     }
 
     @Test

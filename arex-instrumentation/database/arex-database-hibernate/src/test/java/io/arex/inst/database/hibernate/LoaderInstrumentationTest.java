@@ -61,9 +61,7 @@ class LoaderInstrumentationTest {
         try (MockedConstruction<DatabaseExtractor> mocked = Mockito.mockConstruction(DatabaseExtractor.class, (mock, context) -> {
             Mockito.when(mock.replay()).thenReturn(MockResult.success(false, null));
         })) {
-            //TODO 因为修改 MockResult.success 这里报错了
-            //assertTrue(LoaderInstrumentation.QueryAdvice.onEnter(loader, null, null, null));
-            assertFalse(LoaderInstrumentation.QueryAdvice.onEnter(loader, null, null, null));
+            assertTrue(LoaderInstrumentation.QueryAdvice.onEnter(loader, null, null, null));
         }
     }
 

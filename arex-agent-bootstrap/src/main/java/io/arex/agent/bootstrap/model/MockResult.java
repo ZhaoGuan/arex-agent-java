@@ -29,10 +29,12 @@ public class MockResult {
     }
 
     public static MockResult success(boolean ignoreMockResult, Object mockResult) {
-        // TODO 记录修改的内容 空结果返回 null 防止出现服务500
-        if (mockResult == null) {
-            return new MockResult(true, null, null);
+        // TODO 有自定义参数的时候 这里才对 mockResult==null 返回 null
+        String isAlwaysReplay = System.getProperty("arex.isAlwaysReplay");
+        if (isAlwaysReplay != null && isAlwaysReplay.equals("true") && mockResult == null) {
+            return null;
         }
+
         if (mockResult instanceof Throwable) {
             return new MockResult(ignoreMockResult, null, (Throwable) mockResult);
         }
