@@ -358,7 +358,7 @@ public class ConfigManager {
         setMessage(serviceConfig.getMessage());
 
         updateRuntimeConfig();
-        // todo 新增自定义参数
+        // TODO 新增自定义参数
         try {
             ConfigQueryResponse.CustomParameters customParameters = serviceConfig.getCustomParameters();
             if (customParameters.isAlwaysReplay()) {

@@ -100,6 +100,7 @@ public final class MockUtils {
         // TODO 新增record开关
         String isAlwaysRecord = System.getProperty("arex.isAlwaysRecord");
         if (isAlwaysRecord != null && isAlwaysRecord.equals("true")) {
+            LogManager.info("recordMocker categoryType: ", requestMocker.getCategoryType().getName());
             executeRecord(Collections.singletonList(requestMocker));
             if (requestMocker.getCategoryType().isEntryPoint()) {
                 // after main entry record finished, record remain merge mocker that have not reached the merge threshold once(such as dynamicClass)
@@ -127,8 +128,7 @@ public final class MockUtils {
     public static void executeRecord(List<Mocker> mockerList) {
         if (Config.get().isEnableDebug()) {
             for (Mocker mocker : mockerList) {
-                LogManager.info(mocker.recordLogTitle(), StringUtil.format("%s%nrequest: %s",
-                        mocker.logBuilder().toString(), Serializer.serialize(mocker)));
+                LogManager.info(mocker.recordLogTitle(), StringUtil.format("%s%nrequest: %s", mocker.logBuilder().toString(), Serializer.serialize(mocker)));
             }
         }
         DataService.INSTANCE.save(mockerList);
@@ -145,8 +145,7 @@ public final class MockUtils {
             return executeReplay(requestMocker, mockStrategy);
         }
         // 原逻辑
-        if (CaseManager.isInvalidCase(requestMocker.getReplayId()) &&
-                isNotConfigFile(requestMocker.getCategoryType())) {
+        if (CaseManager.isInvalidCase(requestMocker.getReplayId()) && isNotConfigFile(requestMocker.getCategoryType())) {
             return null;
         }
 
@@ -169,8 +168,7 @@ public final class MockUtils {
         boolean isEnableDebug = Config.get().isEnableDebug();
 
         if (isEnableDebug) {
-            LogManager.info(requestMocker.replayLogTitle(), StringUtil.format("%s%nrequest: %s%nresponse: %s",
-                    requestMocker.logBuilder().toString(), postJson, data));
+            LogManager.info(requestMocker.replayLogTitle(), StringUtil.format("%s%nrequest: %s%nresponse: %s", requestMocker.logBuilder().toString(), postJson, data));
         }
 
         if (StringUtil.isEmpty(data) || EMPTY_JSON.equals(data)) {
@@ -200,8 +198,7 @@ public final class MockUtils {
             return null;
         }
 
-        return Serializer.deserialize(responseMocker.getTargetResponse().getBody(),
-                responseMocker.getTargetResponse().getType());
+        return Serializer.deserialize(responseMocker.getTargetResponse().getBody(), responseMocker.getTargetResponse().getType());
     }
 
     public static boolean checkResponseMocker(Mocker responseMocker) {
@@ -219,9 +216,7 @@ public final class MockUtils {
         if (StringUtil.isEmpty(body)) {
             String exceedSizeLog = StringUtil.EMPTY;
             if (MapUtils.getBoolean(targetResponse.getAttributes(), ArexConstants.EXCEED_MAX_SIZE_FLAG)) {
-                exceedSizeLog = StringUtil.format(
-                        ", because exceed memory max limit:%s, please check method return size, suggest replace it",
-                        AgentSizeOf.humanReadableUnits(AgentSizeOf.getSizeLimit()));
+                exceedSizeLog = StringUtil.format(", because exceed memory max limit:%s, please check method return size, suggest replace it", AgentSizeOf.humanReadableUnits(AgentSizeOf.getSizeLimit()));
             }
             LogManager.info(logTitle, StringUtil.format("operation: %s body of targetResponse is empty%s", operationName, exceedSizeLog));
             return false;
@@ -236,16 +231,11 @@ public final class MockUtils {
     }
 
     public static int methodSignatureHash(Mocker requestMocker) {
-        return StringUtil.encodeAndHash(String.format("%s_%s",
-                requestMocker.getOperationName(),
-                requestMocker.getTargetRequest().getBody()));
+        return StringUtil.encodeAndHash(String.format("%s_%s", requestMocker.getOperationName(), requestMocker.getTargetRequest().getBody()));
     }
 
     public static int methodRequestTypeHash(Mocker requestMocker) {
-        return StringUtil.encodeAndHash(String.format("%s_%s_%s",
-                requestMocker.getCategoryType().getName(),
-                requestMocker.getOperationName(),
-                requestMocker.getTargetRequest().getType()));
+        return StringUtil.encodeAndHash(String.format("%s_%s_%s", requestMocker.getCategoryType().getName(), requestMocker.getOperationName(), requestMocker.getTargetRequest().getType()));
     }
 
     /**
@@ -257,8 +247,7 @@ public final class MockUtils {
         String data = DataService.INSTANCE.queryAll(postJson);
         String cost = String.valueOf(System.currentTimeMillis() - startTime);
         if (StringUtil.isEmpty(data) || EMPTY_JSON.equals(data)) {
-            LogManager.warn(requestMocker.replayLogTitle(),
-                    StringUtil.format("cost: %s ms%nrequest: %s%nresponse is null.", cost, postJson));
+            LogManager.warn(requestMocker.replayLogTitle(), StringUtil.format("cost: %s ms%nrequest: %s%nresponse is null.", cost, postJson));
             return null;
         }
         String message = StringUtil.format("cost: %s ms%nrequest: %s", cost, postJson);
