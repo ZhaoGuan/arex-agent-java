@@ -34,7 +34,7 @@ public class MockResult {
         if (isAlwaysReplay != null && isAlwaysReplay.equals("true") && mockResult == null) {
             return null;
         }
-
+        // 原逻辑
         if (mockResult instanceof Throwable) {
             return new MockResult(ignoreMockResult, null, (Throwable) mockResult);
         }

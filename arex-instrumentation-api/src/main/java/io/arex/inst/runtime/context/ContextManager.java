@@ -60,7 +60,7 @@ public class ContextManager {
     }
 
     public static boolean needRecord() {
-        // TODO 新增recoard开关
+        // TODO 新增record开关
         String isAlwaysRecord = System.getProperty("arex.isAlwaysRecord");
         if (isAlwaysRecord != null && isAlwaysRecord.equals("true")) {
             return true;

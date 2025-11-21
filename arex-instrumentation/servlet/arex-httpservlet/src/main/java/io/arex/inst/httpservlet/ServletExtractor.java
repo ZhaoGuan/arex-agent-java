@@ -14,6 +14,7 @@ import io.arex.inst.runtime.model.ArexConstants;
 import io.arex.inst.runtime.serializer.Serializer;
 import io.arex.inst.runtime.util.MockUtils;
 import io.arex.inst.runtime.util.TypeUtil;
+
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Collection;
@@ -106,14 +107,14 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
         Map<String, Object> requestAttributes = getRequestAttributes();
         requestAttributes.put("HttpMethod", httpMethod);
         requestAttributes.put("RequestPath", requestPath);
-        Map<String,String> requestHeaders = getRequestHeaders();
+        Map<String, String> requestHeaders = getRequestHeaders();
         requestAttributes.put("Headers", requestHeaders);
         requestAttributes.computeIfAbsent(ArexConstants.CONFIG_VERSION,
                 key -> adapter.getAttribute(httpServletRequest, ArexConstants.CONFIG_VERSION));
 
         String originalMocker = requestHeaders.get(ArexConstants.REPLAY_ORIGINAL_MOCKER);
         MockCategoryType mockCategoryType =
-            originalMocker == null ? MockCategoryType.SERVLET : MockCategoryType.createEntryPoint(originalMocker);
+                originalMocker == null ? MockCategoryType.SERVLET : MockCategoryType.createEntryPoint(originalMocker);
         Mocker mocker = MockUtils.create(mockCategoryType, pattern);
 
         mocker.getTargetRequest().setAttributes(requestAttributes);
@@ -124,6 +125,7 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
         String responseString = response instanceof String ? (String) response : Serializer.serialize(response);
         mocker.getTargetResponse().setBody(responseString);
         mocker.getTargetResponse().setType(TypeUtil.getName(response));
+        //TODO 录制和回放互斥
         if (ContextManager.needReplay()) {
             MockUtils.replayMocker(mocker);
         } else if (ContextManager.needRecord()) {
@@ -168,7 +170,7 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
 
     private String getRequest() {
         HttpMessageConverter converter = HttpMessageConvertFactory.getSupportedConverter(
-            httpServletRequest, adapter);
+                httpServletRequest, adapter);
         return Base64.getEncoder().encodeToString(converter.getRequest(httpServletRequest, adapter));
     }
 

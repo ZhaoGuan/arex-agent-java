@@ -59,6 +59,7 @@ public class InternalHttpAsyncClientInstrumentation extends TypeInstrumentation 
             if (ContextManager.needRecordOrReplay() && RepeatedCollectManager.validate()) {
                 FutureCallback<?> callbackWrapper = FutureCallbackWrapper.wrap(producer.generateRequest(), callback);
                 if (callbackWrapper != null) {
+                    // TODO 录制和回放互斥
                     if (ContextManager.needRecord()) {
                         // recording works in callback wrapper
                         ((FutureCallbackWrapper<?>)callbackWrapper).setNeedRecord(true);

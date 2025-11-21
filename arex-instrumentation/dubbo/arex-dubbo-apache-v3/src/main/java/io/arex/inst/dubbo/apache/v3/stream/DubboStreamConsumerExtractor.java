@@ -118,7 +118,7 @@ public class DubboStreamConsumerExtractor {
 
     public void doReplay(TripleClientCall clientCall, ClientCall.Listener listener, List<MockResult> mockResults) {
         try {
-            //TODO 因为修改 MockResult.success 这里报错了
+            //TODO 开启 isAlwaysReplay MockResult.success 这里可能报错了
             boolean autoRequest = clientCall.isAutoRequest();
             clientCall.setAutoRequest(false);
             listener.onStart(clientCall);

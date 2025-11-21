@@ -80,6 +80,7 @@ public class RequestTracingHandler extends SimpleChannelUpstreamHandler {
                 return;
             }
             Mocker mocker = (Mocker) mockerObj;
+            // TODO 回放和录制互斥
             if (ContextManager.needReplay()) {
                 MockUtils.replayBody(mocker);
             } else if (ContextManager.needRecord()) {

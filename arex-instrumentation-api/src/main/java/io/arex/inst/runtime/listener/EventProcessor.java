@@ -37,9 +37,10 @@ public class EventProcessor {
     private static final AtomicReference<InitializeEnum> INIT_DEPENDENCY = new AtomicReference<>(InitializeEnum.START);
     private static final Method FIND_LOADED_METHOD = ReflectUtil.getMethod(ClassLoader.class, "findLoadedClass", String.class);
     private static boolean existJacksonDependency = true;
+
     static {
         try {
-            Class.forName("com.fasterxml.jackson.databind.ObjectMapper",true, Thread.currentThread().getContextClassLoader());
+            Class.forName("com.fasterxml.jackson.databind.ObjectMapper", true, Thread.currentThread().getContextClassLoader());
         } catch (ClassNotFoundException e) {
             existJacksonDependency = false;
         }
@@ -48,7 +49,7 @@ public class EventProcessor {
     /**
      * the onRequest method must be called before calling the onCreate method
      */
-    public static void onCreate(EventSource source){
+    public static void onCreate(EventSource source) {
         if (!dependencyInitComplete()) {
             return;
         }
@@ -84,15 +85,16 @@ public class EventProcessor {
         Serializer.builder(serializableList).build();
     }
 
-    public static void initContext(EventSource source){
+    public static void initContext(EventSource source) {
         ArexContext context = ContextManager.currentContext(true, source.getCaseId());
         if (context != null) {
             context.setExcludeMockTemplate(Serializer.deserialize(source.getExcludeMockTemplate(), EXCLUDE_MOCK_TYPE));
         }
     }
 
-    private static void initClock(){
+    private static void initClock() {
         try {
+            //TODO 录制和回放互斥
             if (ContextManager.needReplay()) {
                 Mocker mocker = MockUtils.createDynamicClass(CLOCK_CLASS, CLOCK_METHOD);
                 long millis = NumberUtil.parseLong(MockUtils.replayBody(mocker));
@@ -110,7 +112,7 @@ public class EventProcessor {
         }
     }
 
-    public static void onExit(){
+    public static void onExit() {
         ContextManager.remove();
     }
 
@@ -120,7 +122,7 @@ public class EventProcessor {
      * The initialization process should not block the main thread and should be done asynchronously.
      * Recording should start after INIT_DEPENDENCY is set to complete.
      */
-    public static void onRequest(){
+    public static void onRequest() {
         if (INIT_DEPENDENCY.compareAndSet(InitializeEnum.START, InitializeEnum.RUNNING)) {
             ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
             // https://bugs.openjdk.org/browse/JDK-8172726
