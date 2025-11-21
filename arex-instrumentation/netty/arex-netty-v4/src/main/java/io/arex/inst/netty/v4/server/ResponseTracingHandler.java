@@ -82,6 +82,7 @@ public class ResponseTracingHandler extends ChannelOutboundHandlerAdapter {
         }
         mocker.getTargetResponse().setBody(Serializer.serialize(response));
         mocker.getTargetResponse().setType(TypeUtil.getName(response));
+        // TODO 录制和回放互斥
         if (ContextManager.needReplay()) {
             MockUtils.replayMocker(mocker);
         } else {

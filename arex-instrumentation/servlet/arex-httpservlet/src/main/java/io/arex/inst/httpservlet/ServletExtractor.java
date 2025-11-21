@@ -125,7 +125,7 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
         String responseString = response instanceof String ? (String) response : Serializer.serialize(response);
         mocker.getTargetResponse().setBody(responseString);
         mocker.getTargetResponse().setType(TypeUtil.getName(response));
-        //TODO 录制和回放互斥
+        // TODO 录制和回放互斥
         if (ContextManager.needReplay()) {
             MockUtils.replayMocker(mocker);
         } else if (ContextManager.needRecord()) {

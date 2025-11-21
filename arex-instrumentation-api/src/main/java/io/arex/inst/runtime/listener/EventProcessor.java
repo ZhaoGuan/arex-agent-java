@@ -94,7 +94,7 @@ public class EventProcessor {
 
     private static void initClock() {
         try {
-            //TODO 录制和回放互斥
+            // TODO 录制和回放互斥
             if (ContextManager.needReplay()) {
                 Mocker mocker = MockUtils.createDynamicClass(CLOCK_CLASS, CLOCK_METHOD);
                 long millis = NumberUtil.parseLong(MockUtils.replayBody(mocker));
