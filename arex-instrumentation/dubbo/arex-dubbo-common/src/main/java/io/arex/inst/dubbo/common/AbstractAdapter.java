@@ -30,7 +30,16 @@ public abstract class AbstractAdapter {
         }
         // TODO 录制和回放互斥
         if (ContextManager.needReplay()) {
-            MockUtils.replayMocker(mocker);
+            Object replayResult = MockUtils.replayMocker(mocker);
+            // 这里需要判断上文的 replayMock结果 如果有 这里也不能执行 不然返回 entry 会被录制
+            String isAlwaysReplay = System.getProperty("arex.isAlwaysReplay");
+            if (replayResult == null && mocker.getReplayId() == null && isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
+                mocker.getTargetResponse().setBody(String.valueOf(System.currentTimeMillis()));
+                mocker.getTargetResponse().setType(Long.class.getName());
+                MockUtils.recordMocker(mocker);
+            }
+            // 原逻辑
+            // MockUtils.replayMocker(mocker);
         } else {
             MockUtils.recordMocker(mocker);
         }
