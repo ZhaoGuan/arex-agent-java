@@ -24,12 +24,6 @@ public class RepeatedCollectManager {
 
     public static boolean exitAndValidate() {
         CallDepth callDepth = Context.get();
-        // TODO 新增record开关
-        String isAlwaysRecord = System.getProperty("arex.isAlwaysRecord");
-        if (isAlwaysRecord != null && isAlwaysRecord.equals("true")) {
-            return true;
-        }
-        // 原逻辑
         if (callDepth == null) {
             return true;
         }

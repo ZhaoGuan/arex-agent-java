@@ -1,5 +1,6 @@
 package io.arex.inst.runtime.util;
 
+import io.arex.agent.bootstrap.TraceContextManager;
 import io.arex.agent.bootstrap.model.ArexMocker;
 import io.arex.agent.bootstrap.model.MockCategoryType;
 import io.arex.agent.bootstrap.model.MockStrategyEnum;
@@ -11,7 +12,6 @@ import io.arex.inst.runtime.log.LogManager;
 import io.arex.inst.runtime.config.Config;
 import io.arex.inst.runtime.context.ArexContext;
 import io.arex.inst.runtime.context.ContextManager;
-import io.arex.inst.runtime.log.Logger;
 import io.arex.inst.runtime.match.ReplayMatcher;
 import io.arex.inst.runtime.model.ArexConstants;
 import io.arex.inst.runtime.model.QueryAllMockerDTO;
@@ -96,18 +96,7 @@ public final class MockUtils {
     }
 
     public static void recordMocker(Mocker requestMocker) {
-        // 这个会根据 ContextManager 的状态这边才无法录制的
-        // TODO 新增record开关
-        String isAlwaysRecord = System.getProperty("arex.isAlwaysRecord");
-        if (isAlwaysRecord != null && isAlwaysRecord.equals("true")) {
-            LogManager.info("recordMocker categoryType: ", requestMocker.getCategoryType().getName());
-            executeRecord(Collections.singletonList(requestMocker));
-            if (requestMocker.getCategoryType().isEntryPoint()) {
-                // after main entry record finished, record remain merge mocker that have not reached the merge threshold once(such as dynamicClass)
-                MergeRecordUtil.recordRemain(ContextManager.currentContext());
-            }
-            return;
-        }
+        // TODO 可以不添加 record 开关
         // 原逻辑
         if (CaseManager.isInvalidCase(requestMocker.getRecordId())) {
             return;
@@ -139,7 +128,7 @@ public final class MockUtils {
     }
 
     public static Mocker replayMocker(Mocker requestMocker, MockStrategyEnum mockStrategy) {
-        // TODO 新增replay开关
+        // TODO 新增replay开关 都哪些类型这个
         String isAlwaysReplay = System.getProperty("arex.isAlwaysReplay");
         if (isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
             return executeReplay(requestMocker, mockStrategy);

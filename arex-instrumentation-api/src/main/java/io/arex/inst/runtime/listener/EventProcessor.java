@@ -97,10 +97,24 @@ public class EventProcessor {
             // TODO 录制和回放互斥
             if (ContextManager.needReplay()) {
                 Mocker mocker = MockUtils.createDynamicClass(CLOCK_CLASS, CLOCK_METHOD);
-                long millis = NumberUtil.parseLong(MockUtils.replayBody(mocker));
+                // TODO 新增逻辑
+                // TODO replayId 为空 Mock 且Mock 结果为空的时候执行录制逻辑
+                Object replayResult = MockUtils.replayBody(mocker);
+                long millis = NumberUtil.parseLong(replayResult);
                 if (millis > 0) {
                     TimeCache.put(millis);
                 }
+                String isAlwaysReplay = System.getProperty("arex.isAlwaysReplay");
+                if (mocker.getReplayId() == null && replayResult == null && isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
+                    mocker.getTargetResponse().setBody(String.valueOf(System.currentTimeMillis()));
+                    mocker.getTargetResponse().setType(Long.class.getName());
+                    MockUtils.recordMocker(mocker);
+                }
+                // 原逻辑
+                // long millis = NumberUtil.parseLong(MockUtils.replayBody(mocker));
+                // if (millis > 0) {
+                //    TimeCache.put(millis);
+                // }
             } else if (ContextManager.needRecord()) {
                 Mocker mocker = MockUtils.createDynamicClass(CLOCK_CLASS, CLOCK_METHOD);
                 mocker.getTargetResponse().setBody(String.valueOf(System.currentTimeMillis()));

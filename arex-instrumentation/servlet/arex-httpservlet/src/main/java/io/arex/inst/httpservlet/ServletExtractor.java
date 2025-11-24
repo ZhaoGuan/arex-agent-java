@@ -16,12 +16,7 @@ import io.arex.inst.runtime.util.MockUtils;
 import io.arex.inst.runtime.util.TypeUtil;
 
 import java.io.IOException;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * ServletWrapper
@@ -35,8 +30,7 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
     private final HttpServletResponse httpServletResponse;
     private final ServletAdapter<HttpServletRequest, HttpServletResponse> adapter;
 
-    public ServletExtractor(ServletAdapter<HttpServletRequest, HttpServletResponse> adapter,
-                            HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    public ServletExtractor(ServletAdapter<HttpServletRequest, HttpServletResponse> adapter, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         this.httpServletRequest = httpServletRequest;
         this.httpServletResponse = httpServletResponse;
         this.adapter = adapter;
@@ -59,8 +53,7 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
             return;
         }
 
-        if (adapter.getResponseHeader(httpServletResponse, ArexConstants.RECORD_ID) != null ||
-                adapter.getResponseHeader(httpServletResponse, ArexConstants.REPLAY_ID) != null) {
+        if (adapter.getResponseHeader(httpServletResponse, ArexConstants.RECORD_ID) != null || adapter.getResponseHeader(httpServletResponse, ArexConstants.REPLAY_ID) != null) {
             adapter.copyBodyToResponse(httpServletResponse);
             return;
         }
@@ -79,13 +72,11 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
 
     private void setResponseHeader() {
         if (ContextManager.needRecord()) {
-            adapter.setResponseHeader(httpServletResponse, ArexConstants.RECORD_ID,
-                    ContextManager.currentContext().getCaseId());
+            adapter.setResponseHeader(httpServletResponse, ArexConstants.RECORD_ID, ContextManager.currentContext().getCaseId());
         }
 
         if (ContextManager.needReplay()) {
-            adapter.setResponseHeader(httpServletResponse, ArexConstants.REPLAY_ID,
-                    ContextManager.currentContext().getReplayId());
+            adapter.setResponseHeader(httpServletResponse, ArexConstants.REPLAY_ID, ContextManager.currentContext().getReplayId());
         }
     }
 
@@ -109,12 +100,10 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
         requestAttributes.put("RequestPath", requestPath);
         Map<String, String> requestHeaders = getRequestHeaders();
         requestAttributes.put("Headers", requestHeaders);
-        requestAttributes.computeIfAbsent(ArexConstants.CONFIG_VERSION,
-                key -> adapter.getAttribute(httpServletRequest, ArexConstants.CONFIG_VERSION));
+        requestAttributes.computeIfAbsent(ArexConstants.CONFIG_VERSION, key -> adapter.getAttribute(httpServletRequest, ArexConstants.CONFIG_VERSION));
 
         String originalMocker = requestHeaders.get(ArexConstants.REPLAY_ORIGINAL_MOCKER);
-        MockCategoryType mockCategoryType =
-                originalMocker == null ? MockCategoryType.SERVLET : MockCategoryType.createEntryPoint(originalMocker);
+        MockCategoryType mockCategoryType = originalMocker == null ? MockCategoryType.SERVLET : MockCategoryType.createEntryPoint(originalMocker);
         Mocker mocker = MockUtils.create(mockCategoryType, pattern);
 
         mocker.getTargetRequest().setAttributes(requestAttributes);
@@ -127,7 +116,18 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
         mocker.getTargetResponse().setType(TypeUtil.getName(response));
         // TODO 录制和回放互斥
         if (ContextManager.needReplay()) {
-            MockUtils.replayMocker(mocker);
+            // TODO replayId 为空的时候执行录制逻辑
+            Object replayResult = MockUtils.replayMocker(mocker);
+            // 这里需要判断上文的 replayMock结果 如果有 这里也不能执行 不然返回 entry 会被录制
+            String isAlwaysReplay = System.getProperty("arex.isAlwaysReplay");
+            if (replayResult == null && mocker.getReplayId() == null && isAlwaysReplay != null && isAlwaysReplay.equals("true")) {
+                mocker.getTargetResponse().setBody(String.valueOf(System.currentTimeMillis()));
+                mocker.getTargetResponse().setType(Long.class.getName());
+                MockUtils.recordMocker(mocker);
+            }
+            // 原逻辑
+            // MockUtils.replayMocker(mocker);
+
         } else if (ContextManager.needRecord()) {
             MockUtils.recordMocker(mocker);
         }
@@ -169,8 +169,7 @@ public class ServletExtractor<HttpServletRequest, HttpServletResponse> {
     }
 
     private String getRequest() {
-        HttpMessageConverter converter = HttpMessageConvertFactory.getSupportedConverter(
-                httpServletRequest, adapter);
+        HttpMessageConverter converter = HttpMessageConvertFactory.getSupportedConverter(httpServletRequest, adapter);
         return Base64.getEncoder().encodeToString(converter.getRequest(httpServletRequest, adapter));
     }
 
